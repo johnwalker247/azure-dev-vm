@@ -27,14 +27,6 @@
     - moreutils
     state: present
     force_apt_get: yes
-- name: Register git_name
-  shell: |
-    name="$(git config --global user.name)"
-    echo "${name}"
-  args:
-    executable: /bin/bash
-  register: git_name
-  changed_when: false
 
 - name: Configure .bashrc with the default editor
   blockinfile:
