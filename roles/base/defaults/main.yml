@@ -1,0 +1,2 @@
+default_editor_cmd: vim
+difftool: vimdiff

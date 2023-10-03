@@ -1,0 +1,80 @@
+- name: Upgrade host packages
+  become: yes
+  apt:
+    update_cache: yes
+    upgrade: 'yes'
+- name: Install basic apt necessities
+  become: yes
+  apt:
+    update_cache: yes
+    name:
+    - sshpass
+    - curl
+    - unzip
+    - tmux
+    - git
+    - dnsutils
+    - ntp
+    - netcat
+    - jq
+    - apt-transport-https
+    - ca-certificates
+    - gnupg
+    - lsb-release
+    - crudini
+    - ffmpeg
+    - python3
+    - python3-pip
+    - python3-venv
+    - net-tools
+    - moreutils
+    state: present
+    force_apt_get: yes
+- name: Register git_name
+  shell: |
+    name="$(git config --global user.name)"
+    echo "${name}"
+  args:
+    executable: /bin/bash
+  register: git_name
+  changed_when: false
+- name: Configure git name
+  shell: git config --global user.name '{{ full_name }}'
+  when: git_name.stdout != full_name
+- name: Register git_current_email
+  shell: |
+    email="$(git config --global user.email)"
+    echo "${email}"
+  args:
+    executable: /bin/bash
+  register: git_current_email
+  changed_when: false
+- name: Configure git email
+  shell: git config --global user.email '{{ email }}'
+  when: git_current_email.stdout != email
+- name: Register git_current_difftool
+  shell: |
+    difftool="$(git config --global diff.tool)"
+    echo "${difftool}"
+  args:
+    executable: /bin/bash
+  register: git_current_difftool
+  changed_when: false
+- name: Configure git difftool
+  shell: git config --global diff.tool '{{ difftool }}'
+  when: git_current_difftool.stdout != difftool
+
+- name: Configure .bashrc with the default editor
+  blockinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    marker: "# {mark} DEFAULT EDITOR"
+    block: |
+      export VISUAL="{{ default_editor_cmd }}"
+      export EDITOR="${VISUAL}"
+- name: Add Microsoft gpg signing key
+  become: yes
+  ansible.builtin.apt_key:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    keyring: /etc/apt/trusted.gpg.d/microsoft.gpg
+    state: present
+
